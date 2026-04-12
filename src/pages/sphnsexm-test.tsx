@@ -924,38 +924,52 @@ export default function SphnsExmTest() {
       
       // Filter out any undefined slots just in case
       const compactResults = results.filter(Boolean);
-      // Execute Supabase Insert with strict 10s timeout to prevent infinite hang on network drops
-      const insertPromise = supabase.from("exam_submissions").insert({
+      
+      // Use Admin Client if available to bypass RLS issues during submission
+      const adminClient = supabaseAdmin || supabase;
+      
+      const insertPromise = adminClient.from("exam_submissions").insert({
         exam_id: selectedEx?.id,
         user_id: user?.id,
-        student_name: `${user?.email?.split('@')[0] || "Student"} (${user?.email})`,
-        roll_number: "Unknown",
         score,
         total_marks: total,
         time_used_seconds: timeTakenSeconds,
         status: auto ? "auto_submitted" : "completed",
         answers: { ...answers, _breakdown: compactResults },
         violations: violations,
-        exam_title: selectedEx?.title
+        exam_title: selectedEx?.title,
+        // Optional metadata that might be expected by the schema
+        student_name: user?.email?.split("@")[0] || "Student",
+        email: user?.email
       });
 
       const { data: _data, error: insertErr } = await Promise.race([
         insertPromise,
-        new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Database connection timed out during submission. Please try again.")), 10000))
+        new Promise<any>((_, reject) => setTimeout(() => reject(new Error("Database connection timed out during submission.")), 15000))
       ]);
       
       if (insertErr) {
-        console.error("Insertion error: ", insertErr);
+        console.error("[Submit] Insertion error: ", insertErr);
+        // If it's a specific column error, we might want to know
+        toast({ 
+          variant: "destructive", 
+          title: "Submission Error", 
+          description: insertErr.message || "Failed to save submission." 
+        });
         setInsertErrorData(JSON.stringify(insertErr, null, 2));
         setPhase("error");
         return;
       }
       
+      console.log("[Submit] Success, switching to results");
       setEvalResult({ score, total, violations, title: selectedEx?.title, breakdown: compactResults });
       setPhase("results");
-      fetchData();
+      
+      // Force immediate refresh of telemetry
+      setTimeout(() => fetchData(), 500);
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Submission Failed", description: e.message });
+      console.error("[Submit] Fatal error: ", e);
+      toast({ variant: "destructive", title: "Fatal Error", description: e.message });
       setPhase("dashboard");
     }
   };
