@@ -800,11 +800,13 @@ export default function SphnsExmTest() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [evalResult, setEvalResult] = useState<any>(null);
   const [showRegDialog, setShowRegDialog] = useState(false);
+  const [showConfirmStart, setShowConfirmStart] = useState(false);
   const [isCheckingReg, setIsCheckingReg] = useState(false);
   const [regData, setRegData] = useState({
     full_name: "", roll_number: "", year: "", section: "", department: "", college: "", phone: ""
   });
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [confirmData, setConfirmData] = useState({ name: "", roll: "" });
   const hasInitializedRef = useRef(false);
 
   const checkRegistration = async (u: any) => {
@@ -877,15 +879,25 @@ export default function SphnsExmTest() {
       supabase.from("exams").select("*").eq("is_active", true).order("created_at", { ascending: false }),
       supabase.from("exam_submissions").select("*, exams(title)").eq("user_id", user.id).order("created_at", { ascending: false })
     ]);
-    if (eRes.data) setExams(eRes.data);
-    if (sRes.data) setSubmissions(sRes.data);
+    if (!eRes.data) setExams([]); else setExams(eRes.data);
+    if (sRes.data) setSubmissions(sRes.data); else setSubmissions([]);
   };
 
   const handleStartExam = async (ex: any) => {
-    const { data: qData } = await (supabaseAdmin || supabase).from("exam_questions").select("*").eq("exam_id", ex.id).order("sort_order", { ascending: true });
+    setSelectedEx(ex);
+    setConfirmData({
+      name: userProfile?.full_name || user?.email?.split("@")[0] || "",
+      roll: userProfile?.roll_number || ""
+    });
+    setShowConfirmStart(true);
+  };
+
+  const finalizeStartExam = async () => {
+    if (!selectedEx) return;
+    const { data: qData } = await (supabaseAdmin || supabase).from("exam_questions").select("*").eq("exam_id", selectedEx.id).order("sort_order", { ascending: true });
     if (qData) {
       setQuestions(shuffleArray(qData.map(q => ({ ...q, options: typeof q.options === "string" ? JSON.parse(q.options) : (q.options || []) }))));
-      setSelectedEx(ex);
+      setShowConfirmStart(false);
       setPhase("exam");
     }
   };
@@ -941,8 +953,8 @@ export default function SphnsExmTest() {
         answers: { ...answers, _breakdown: compactResults },
         violations: violations,
         exam_title: selectedEx?.title,
-        student_name: userProfile?.full_name || user?.email?.split("@")[0] || "Student",
-        roll_number: userProfile?.roll_number || "Unknown"
+        student_name: confirmData.name || "Student",
+        roll_number: confirmData.roll || "Unknown"
       });
 
       const { data: _data, error: insertErr } = await Promise.race([
@@ -1044,6 +1056,40 @@ export default function SphnsExmTest() {
             </div>
             <Button type="submit" className="w-full">Save Profile</Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showConfirmStart} onOpenChange={setShowConfirmStart}>
+        <DialogContent className="sm:max-w-[425px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>Confirm Identity</DialogTitle>
+            <DialogDescription>
+              Verify your details before starting <strong>{selectedEx?.title}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-1">
+              <Label htmlFor="confirm-name">Full Name</Label>
+              <Input 
+                id="confirm-name" 
+                value={confirmData.name} 
+                onChange={e => setConfirmData({...confirmData, name: e.target.value})} 
+                placeholder="Ex: Jashwanth Singh"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="confirm-roll">Roll Number (ID)</Label>
+              <Input 
+                id="confirm-roll" 
+                value={confirmData.roll} 
+                onChange={e => setConfirmData({...confirmData, roll: e.target.value})} 
+                placeholder="Ex: 24N81A6..."
+              />
+            </div>
+            <Button onClick={finalizeStartExam} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
+              START EXAM
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
