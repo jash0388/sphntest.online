@@ -783,9 +783,6 @@ function ResultsView({ result, onBack }: any) {
         </motion.div>
       </main>
     </div>
-  );
-}
-
 // ==========================================
 // MAIN CONTROLLER
 // ==========================================
@@ -793,6 +790,12 @@ export default function SphnsExmTest() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { toast } = useToast();
   
+  const [phase, setPhase] = useState<"auth" | "dashboard" | "exam" | "results" | "error">("auth");
+  const [insertErrorData, setInsertErrorData] = useState<string>("");
+  const [exams, setExams] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [selectedEx, setSelectedEx] = useState<any | null>(null);
+  const [questions, setQuestions] = useState<any[]>([]);
   const [evalResult, setEvalResult] = useState<any>(null);
   const [showRegDialog, setShowRegDialog] = useState(false);
   const [isCheckingReg, setIsCheckingReg] = useState(false);
