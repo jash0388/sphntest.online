@@ -30,6 +30,8 @@ export default function UserAuth() {
   const [showRegistration, setShowRegistration] = useState(false);
   const [registeredUser, setRegisteredUser] = useState<any>(null);
   const [registrationData, setRegistrationData] = useState({
+    full_name: "",
+    roll_number: "",
     year: "",
     section: "",
     department: "",
@@ -68,6 +70,10 @@ export default function UserAuth() {
               email: authUser.email,
               displayName: firebaseUser?.displayName || authUser.email?.split('@')[0] || 'User'
             });
+            setRegistrationData(p => ({
+              ...p,
+              full_name: firebaseUser?.displayName || authUser.email?.split('@')[0] || 'User'
+            }));
             setShowRegistration(true);
           } else {
             const from = (location.state as any)?.from?.pathname || "/";
@@ -141,6 +147,8 @@ export default function UserAuth() {
           console.log('[UserAuth] User not found in registrations, showing popup');
           setRegisteredUser(user);
           setRegistrationData({
+            full_name: user.displayName || user.email?.split('@')[0] || "",
+            roll_number: "",
             year: "",
             section: "",
             department: "",
@@ -186,7 +194,8 @@ export default function UserAuth() {
         .insert({
           user_id: registeredUser.uid,
           email: registeredUser.email || '',
-          full_name: registeredUser.displayName || registeredUser.email?.split('@')[0] || 'Google User',
+          full_name: registrationData.full_name || registeredUser.displayName || registeredUser.email?.split('@')[0] || 'User',
+          roll_number: registrationData.roll_number,
           year: registrationData.year,
           section: registrationData.section,
           department: registrationData.department,
@@ -530,6 +539,28 @@ export default function UserAuth() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleRegistrationSubmit} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="full_name" className="text-foreground">Full Name</Label>
+              <Input
+                id="full_name"
+                placeholder="Ex: Jashwanth Singh"
+                value={registrationData.full_name}
+                onChange={(e) => setRegistrationData({ ...registrationData, full_name: e.target.value })}
+                className="h-10 rounded-xl bg-secondary border-none"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="roll_number" className="text-foreground">Roll Number (ID)</Label>
+              <Input
+                id="roll_number"
+                placeholder="Ex: 24N81A6..."
+                value={registrationData.roll_number}
+                onChange={(e) => setRegistrationData({ ...registrationData, roll_number: e.target.value })}
+                className="h-10 rounded-xl bg-secondary border-none"
+                required
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="year" className="text-foreground">Year</Label>

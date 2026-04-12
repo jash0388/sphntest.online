@@ -802,8 +802,9 @@ export default function SphnsExmTest() {
   const [showRegDialog, setShowRegDialog] = useState(false);
   const [isCheckingReg, setIsCheckingReg] = useState(false);
   const [regData, setRegData] = useState({
-    year: "", section: "", department: "", college: "", phone: ""
+    full_name: "", roll_number: "", year: "", section: "", department: "", college: "", phone: ""
   });
+  const [userProfile, setUserProfile] = useState<any>(null);
   const hasInitializedRef = useRef(false);
 
   const checkRegistration = async (u: any) => {
@@ -819,6 +820,7 @@ export default function SphnsExmTest() {
       if (!data) {
         setShowRegDialog(true);
       } else {
+        setUserProfile(data);
         setPhase("dashboard");
       }
     } catch (e) {
@@ -852,7 +854,8 @@ export default function SphnsExmTest() {
         .insert({
           user_id: user.id,
           email: user.email || '',
-          full_name: user.email?.split('@')[0] || 'User',
+          full_name: regData.full_name || user.email?.split('@')[0] || 'User',
+          roll_number: regData.roll_number,
           year: regData.year,
           section: regData.section,
           department: regData.department,
@@ -862,7 +865,7 @@ export default function SphnsExmTest() {
       if (error) throw error;
       toast({ title: "Registration complete!" });
       setShowRegDialog(false);
-      setPhase("dashboard");
+      checkRegistration(user);
     } catch (e: any) {
       toast({ variant: "destructive", title: "Registration failed", description: e.message });
     }
@@ -938,8 +941,8 @@ export default function SphnsExmTest() {
         answers: { ...answers, _breakdown: compactResults },
         violations: violations,
         exam_title: selectedEx?.title,
-        // Optional metadata that might be expected by the schema
-        student_name: user?.email?.split("@")[0] || "Student",
+        student_name: userProfile?.full_name || user?.email?.split("@")[0] || "Student",
+        roll_number: userProfile?.roll_number || "Unknown",
         email: user?.email
       });
 
@@ -994,10 +997,18 @@ export default function SphnsExmTest() {
           <DialogHeader>
             <DialogTitle>Profile Registration</DialogTitle>
             <DialogDescription>
-              Complete your profile to proceed to the exam portal.
+              Complete your profile identification to proceed.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleRegSubmit} className="space-y-4 pt-4">
+            <div className="space-y-1">
+              <Label htmlFor="reg-name">Full Name</Label>
+              <Input id="reg-name" required value={regData.full_name} onChange={e => setRegData({...regData, full_name: e.target.value})} placeholder="Ex: Jashwanth Singh" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="reg-roll">Roll Number / ID</Label>
+              <Input id="reg-roll" required value={regData.roll_number} onChange={e => setRegData({...regData, roll_number: e.target.value})} placeholder="Ex: 24N81A6..." />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="reg-year">Year</Label>
