@@ -783,6 +783,8 @@ function ResultsView({ result, onBack }: any) {
         </motion.div>
       </main>
     </div>
+  );
+}
 // ==========================================
 // MAIN CONTROLLER
 // ==========================================
