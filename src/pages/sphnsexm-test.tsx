@@ -942,8 +942,7 @@ export default function SphnsExmTest() {
         violations: violations,
         exam_title: selectedEx?.title,
         student_name: userProfile?.full_name || user?.email?.split("@")[0] || "Student",
-        roll_number: userProfile?.roll_number || "Unknown",
-        email: user?.email
+        roll_number: userProfile?.roll_number || "Unknown"
       });
 
       const { data: _data, error: insertErr } = await Promise.race([
