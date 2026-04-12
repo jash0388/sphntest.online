@@ -254,8 +254,7 @@ export default function UserAuth() {
         }
 
         toast({ title: "Welcome back!", description: "Login successful" });
-        const from = (location.state as any)?.from?.pathname || "/";
-        navigate(from, { replace: true });
+        // Removed navigate() from here, useEffect will handle redirect or showing registration dialog
       } else {
         // Sign up with Gmail restriction
         if (!email.toLowerCase().endsWith('@gmail.com')) {

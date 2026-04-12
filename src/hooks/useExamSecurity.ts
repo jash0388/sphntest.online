@@ -63,6 +63,10 @@ export function useExamSecurity(options: ExamSecurityOptions = {}) {
   // Enter fullscreen
   const enterFullscreen = useCallback(async () => {
     try {
+      setIsFullscreen(true);
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        return; // Don't enforce actual fullscreen API on mobile due to iOS/capacitor lack of support
+      }
       const elem = document.documentElement;
       if (elem.requestFullscreen) {
         await elem.requestFullscreen();
@@ -71,7 +75,6 @@ export function useExamSecurity(options: ExamSecurityOptions = {}) {
       } else if ((elem as any).msRequestFullscreen) {
         await (elem as any).msRequestFullscreen();
       }
-      setIsFullscreen(true);
     } catch (err) {
       console.warn('Fullscreen request failed:', err);
     }
@@ -240,6 +243,9 @@ export function useExamSecurity(options: ExamSecurityOptions = {}) {
 
     // === 5. DevTools Detection (size-based heuristic) ===
     const checkDevTools = () => {
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        return; // DevTools check causes false positive when mobile keyboard reduces height 
+      }
       const widthThreshold = window.outerWidth - window.innerWidth > 160;
       const heightThreshold = window.outerHeight - window.innerHeight > 160;
       

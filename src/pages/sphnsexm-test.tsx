@@ -427,12 +427,18 @@ function ExamTakingView({ exam, questions, onSubmit, user }: any) {
 
   const handleEnterFullscreen = async () => {
     try {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        setIsFullscreen(true);
+        return;
+      }
       if (document.documentElement.requestFullscreen) {
         await document.documentElement.requestFullscreen();
         setIsFullscreen(true);
       }
     } catch (err) {
       console.error(err);
+      setIsFullscreen(true); // Fallback to let them take the test anyway
     }
   };
 
@@ -780,21 +786,42 @@ export default function SphnsExmTest() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { toast } = useToast();
   
-  const [phase, setPhase] = useState<"auth" | "dashboard" | "exam" | "results" | "error">("auth");
-  const [insertErrorData, setInsertErrorData] = useState<string>("");
-  const [exams, setExams] = useState<any[]>([]);
-  const [submissions, setSubmissions] = useState<any[]>([]);
-  const [selectedEx, setSelectedEx] = useState<any | null>(null);
-  const [questions, setQuestions] = useState<any[]>([]);
   const [evalResult, setEvalResult] = useState<any>(null);
+  const [showRegDialog, setShowRegDialog] = useState(false);
+  const [isCheckingReg, setIsCheckingReg] = useState(false);
+  const [regData, setRegData] = useState({
+    year: "", section: "", department: "", college: "", phone: ""
+  });
   const hasInitializedRef = useRef(false);
+
+  const checkRegistration = async (u: any) => {
+    if (!u) return;
+    setIsCheckingReg(true);
+    try {
+      const { data, error } = await (supabaseAdmin || supabase)
+        .from('user_registrations')
+        .select('*')
+        .eq('user_id', u.id)
+        .single();
+      
+      if (!data) {
+        setShowRegDialog(true);
+      } else {
+        setPhase("dashboard");
+      }
+    } catch (e) {
+      setShowRegDialog(true);
+    } finally {
+      setIsCheckingReg(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading) {
       if (user) {
         if (!hasInitializedRef.current) {
           hasInitializedRef.current = true;
-          setPhase("dashboard");
+          checkRegistration(user);
           fetchData();
         }
       } else {
@@ -803,6 +830,31 @@ export default function SphnsExmTest() {
       }
     }
   }, [user, authLoading]);
+
+  const handleRegSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    try {
+      const { error } = await (supabaseAdmin || supabase)
+        .from('user_registrations')
+        .insert({
+          user_id: user.id,
+          email: user.email || '',
+          full_name: user.email?.split('@')[0] || 'User',
+          year: regData.year,
+          section: regData.section,
+          department: regData.department,
+          college: regData.college,
+          phone: regData.phone
+        });
+      if (error) throw error;
+      toast({ title: "Registration complete!" });
+      setShowRegDialog(false);
+      setPhase("dashboard");
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Registration failed", description: e.message });
+    }
+  };
 
   const fetchData = async () => {
     if (!user) return;
@@ -872,7 +924,6 @@ export default function SphnsExmTest() {
         status: auto ? "auto_submitted" : "completed",
         answers: { ...answers, _breakdown: compactResults },
         violations: violations,
-        violations_count: violations,
         exam_title: selectedEx?.title
       });
 
@@ -911,6 +962,55 @@ export default function SphnsExmTest() {
       {phase === "dashboard" && <DashboardView exams={exams} submissions={submissions} onStartExam={handleStartExam} onLogout={handleLogout} user={user} />}
       {phase === "exam" && <ExamTakingView exam={selectedEx} questions={questions} onSubmit={handleSubmitExam} user={user} />}
       {phase === "results" && <ResultsView result={evalResult} onBack={() => { setEvalResult(null); setPhase("dashboard"); }} />}
+      
+      <Dialog open={showRegDialog} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-[425px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>Profile Registration</DialogTitle>
+            <DialogDescription>
+              Complete your profile to proceed to the exam portal.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleRegSubmit} className="space-y-4 pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="reg-year">Year</Label>
+                <select 
+                  id="reg-year"
+                  required
+                  className="w-full h-10 px-3 rounded-md bg-background border border-border text-sm"
+                  value={regData.year}
+                  onChange={e => setRegData({...regData, year: e.target.value})}
+                >
+                  <option value="">Select</option>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="reg-section">Section</Label>
+                <Input id="reg-section" required value={regData.section} onChange={e => setRegData({...regData, section: e.target.value})} placeholder="A" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="reg-dept">Department</Label>
+              <Input id="reg-dept" required value={regData.department} onChange={e => setRegData({...regData, department: e.target.value})} placeholder="CSE" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="reg-college">College</Label>
+              <Input id="reg-college" required value={regData.college} onChange={e => setRegData({...regData, college: e.target.value})} placeholder="College Name" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="reg-phone">Phone Number</Label>
+              <Input id="reg-phone" required value={regData.phone} onChange={e => setRegData({...regData, phone: e.target.value})} placeholder="+91..." />
+            </div>
+            <Button type="submit" className="w-full">Save Profile</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {phase === "error" && (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-background">
           <div className="bg-destructive/10 text-destructive p-8 rounded-lg max-w-2xl w-full font-mono whitespace-pre-wrap break-words shadow-xl border border-destructive/30">
