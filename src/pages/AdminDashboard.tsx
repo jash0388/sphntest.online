@@ -489,6 +489,33 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleClearExamSubmissions = async () => {
+    if (examResultsFilter === 'all') {
+      if (!confirm('Are you sure you want to clear ALL submissions for ALL exams? This cannot be undone.')) return;
+      try {
+        const { error } = await supabase.from('exam_submissions').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // delete all
+        if (error) throw error;
+        toast({ title: "Submissions Cleared", description: "All submissions have been deleted." });
+        fetchExamSubmissions();
+      } catch (err) {
+        console.error('Error clearing submissions:', err);
+        toast({ title: "Error", description: "Failed to clear submissions.", variant: "destructive" });
+      }
+    } else {
+      const selectedExamTitle = examsList.find(e => e.id === examResultsFilter)?.title || 'Selected Exam';
+      if (!confirm(`Are you sure you want to clear all submissions for ${selectedExamTitle}? This cannot be undone.`)) return;
+      try {
+        const { error } = await supabase.from('exam_submissions').delete().eq('exam_id', examResultsFilter);
+        if (error) throw error;
+        toast({ title: "Submissions Cleared", description: `All submissions for ${selectedExamTitle} have been deleted.` });
+        fetchExamSubmissions();
+      } catch (err) {
+        console.error('Error clearing submissions:', err);
+        toast({ title: "Error", description: "Failed to clear submissions.", variant: "destructive" });
+      }
+    }
+  };
+
   const exportResultsToCSV = () => {
     const filtered = examSubmissions.filter((s: any) => examResultsFilter === 'all' || s.exam_id === examResultsFilter);
     if (filtered.length === 0) {
@@ -3646,8 +3673,12 @@ const AdminDashboard = () => {
 
                       {/* Questions for this exam */}
                       {qCount > 0 && (
-                        <div className="mt-4 border-t pt-4 space-y-2">
-                          <h4 className="text-sm font-semibold mb-2">Questions:</h4>
+                        <details className="mt-4 border-t pt-4 group" open={exam.is_active}>
+                          <summary className="text-sm font-semibold mb-2 cursor-pointer text-indigo-600 hover:text-indigo-800 list-none flex items-center justify-between outline-none">
+                            <span>Questions ({qCount})</span>
+                            <span className="text-xs transition-transform duration-200 group-open:rotate-180">▼</span>
+                          </summary>
+                          <div className="space-y-2 mt-2">
                           {examQuestions.filter(q => q.exam_id === exam.id).map((q: any, idx: number) => (
                             <div key={q.id} className="flex items-start justify-between bg-slate-50 rounded-lg p-3 text-sm">
                               <div className="flex-1">
@@ -3668,7 +3699,8 @@ const AdminDashboard = () => {
                               </Button>
                             </div>
                           ))}
-                        </div>
+                          </div>
+                        </details>
                       )}
 
                       <Button size="sm" variant="outline" className="mt-4" onClick={() => { setSelectedExamForQuestions(exam.id); setExamQuestionForm({ question: '', question_type: 'mcq', options: ['', '', '', ''], correct_answer: '', marks: 5 }); setExamQuestionDialogOpen(true); }}>
@@ -3690,6 +3722,9 @@ const AdminDashboard = () => {
                     <option value="all">All Exams</option>
                     {examsList.map((exam: any) => (<option key={exam.id} value={exam.id}>{exam.title}</option>))}
                   </select>
+                  <Button size="sm" variant="outline" className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100" onClick={handleClearExamSubmissions}>
+                    <Trash2 className="w-3 h-3 mr-1" /> Clear Submissions
+                  </Button>
                   <Button size="sm" variant="outline" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100" onClick={exportResultsToCSV}>
                     <Download className="w-3 h-3 mr-1" /> Export CSV (Excel)
                   </Button>

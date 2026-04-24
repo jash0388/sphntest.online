@@ -40,39 +40,15 @@ const shuffleArray = (array: any[]) => {
 // ==========================================
 // 1. AUTH VIEW (Exact Replit UI)
 // ==========================================
-function AuthView({ onAuthSuccess }: any) {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+function DetailsView({ onAuthSuccess, onSetUserDetails }: any) {
+  const [formData, setFormData] = useState({
+    name: "", phone: "", fathersName: "", fathersPhone: "", college: ""
+  });
   
-  const { toast } = useToast();
-  const { signIn, signUp, signInWithGoogle } = useAuth();
-
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
-    setIsLoading(true);
-    try {
-      if (mode === "signin") {
-        const { error } = await signIn(email, password);
-        if (error) throw error;
-        onAuthSuccess();
-      } else {
-        if (!email.toLowerCase().endsWith("@gmail.com")) {
-          throw new Error("Only @gmail.com accounts are permitted.");
-        }
-        const { error } = await signUp(email, password);
-        if (error) throw error;
-        toast({ title: "Account created", description: "You are now signed in." });
-        onAuthSuccess();
-      }
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Authentication Failed", description: err.message });
-    } finally {
-      setIsLoading(false);
-    }
+    onSetUserDetails(formData);
+    onAuthSuccess();
   };
 
   return (
@@ -96,115 +72,39 @@ function AuthView({ onAuthSuccess }: any) {
                 <Shield className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-bold tracking-tight">ExamPortal</CardTitle>
+                <CardTitle className="text-2xl font-bold tracking-tight">EMCET MOCK WEB TEST</CardTitle>
                 <CardDescription className="text-muted-foreground mt-1 text-sm">
-                  Secure Academic Assessment
+                  Please enter your details to begin
                 </CardDescription>
-              </div>
-
-              <div className="flex rounded-lg border border-border bg-muted/30 p-1 gap-1">
-                {(["signin", "signup"] as const).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setMode(m)}
-                    className={`flex-1 py-1.5 rounded text-sm font-medium transition-all ${
-                      mode === m
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {m === "signin" ? "Sign In" : "Sign Up"}
-                  </button>
-                ))}
               </div>
             </CardHeader>
 
             <CardContent className="space-y-4">
-              <form onSubmit={handleAuth} className="space-y-3">
+              <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-xs text-muted-foreground uppercase tracking-wider">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@gmail.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-9 bg-background focus:ring-primary/50"
-                      required
-                    />
-                  </div>
+                  <Label htmlFor="name" className="text-xs text-muted-foreground uppercase tracking-wider">Name</Label>
+                  <Input id="name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="bg-background focus:ring-primary/50" />
                 </div>
-
                 <div className="space-y-1.5">
-                  <Label htmlFor="password" className="text-xs text-muted-foreground uppercase tracking-wider">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-9 pr-9 bg-background focus:ring-primary/50"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
+                  <Label htmlFor="phone" className="text-xs text-muted-foreground uppercase tracking-wider">Phone Number</Label>
+                  <Input id="phone" type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required className="bg-background focus:ring-primary/50" />
                 </div>
-
-                <Button type="submit" size="lg" className="w-full h-11" disabled={isLoading}>
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  ) : mode === "signin" ? "Sign In" : "Continue"}
+                <div className="space-y-1.5">
+                  <Label htmlFor="fathersName" className="text-xs text-muted-foreground uppercase tracking-wider">Father's Name</Label>
+                  <Input id="fathersName" value={formData.fathersName} onChange={e => setFormData({...formData, fathersName: e.target.value})} required className="bg-background focus:ring-primary/50" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="fathersPhone" className="text-xs text-muted-foreground uppercase tracking-wider">Father's Phone Number</Label>
+                  <Input id="fathersPhone" type="tel" value={formData.fathersPhone} onChange={e => setFormData({...formData, fathersPhone: e.target.value})} required className="bg-background focus:ring-primary/50" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="college" className="text-xs text-muted-foreground uppercase tracking-wider">College</Label>
+                  <Input id="college" value={formData.college} onChange={e => setFormData({...formData, college: e.target.value})} required className="bg-background focus:ring-primary/50" />
+                </div>
+                <Button type="submit" size="lg" className="w-full h-11 mt-4">
+                  Proceed to Dashboard
                 </Button>
               </form>
-
-              <div className="relative mt-5">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground font-medium tracking-wider">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-11 mt-4 bg-card border-border hover:bg-muted/30"
-                onClick={async () => {
-                  setIsLoading(true);
-                  const { error } = await signInWithGoogle();
-                  setIsLoading(false);
-                  if (error) { toast({ variant: "destructive", title: "Google Sign-In failed", description: error.message }); } else { onAuthSuccess(); }
-                }}
-                disabled={isLoading}
-              >
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                </svg>
-                Google
-              </Button>
-
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/40 border border-border mt-6">
-                <AlertCircle className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Only <span className="text-foreground font-medium">@gmail.com</span> accounts allowed. Please use your official email.
-                </p>
-              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -229,8 +129,7 @@ function DashboardView({ exams, submissions, onStartExam, onLogout, user }: any)
   const stats = {
     totalAttempts: submissions.length,
     averageScore: submissions.length > 0 ? submissions.reduce((a:any, b:any) => a + (b.score/b.total_marks)*100, 0) / submissions.length : 0,
-    highestScore: submissions.length > 0 ? Math.max(...submissions.map((s:any) => s.score/s.total_marks*100)) : 0,
-    totalViolations: submissions.reduce((a:any, b:any) => a + (b.violations || b.violations_count || 0), 0)
+    highestScore: submissions.length > 0 ? Math.max(...submissions.map((s:any) => s.score/s.total_marks*100)) : 0
   };
 
   return (
@@ -239,13 +138,13 @@ function DashboardView({ exams, submissions, onStartExam, onLogout, user }: any)
         <div className="container max-w-6xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <Shield className="w-5 h-5 text-primary shrink-0" />
-            <span className="font-semibold tracking-tight text-sm sm:text-base">ExamPortal</span>
+            <span className="font-semibold tracking-tight text-sm sm:text-base">EMCET MOCK WEB TEST</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-            <span className="text-xs text-muted-foreground hidden sm:inline-block truncate max-w-[200px]">{user?.email}</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline-block truncate max-w-[200px]">{user?.name}</span>
             <Button variant="ghost" size="sm" onClick={onLogout} className="text-muted-foreground hover:text-foreground shrink-0 px-2 sm:px-3">
               <LogOut className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Disconnect</span>
+              <span className="hidden sm:inline">Change User</span>
             </Button>
           </div>
         </div>
@@ -258,7 +157,7 @@ function DashboardView({ exams, submissions, onStartExam, onLogout, user }: any)
             <h2 className="text-base sm:text-xl font-medium tracking-tight mb-3 sm:mb-4 flex items-center gap-2">
               <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" /> Telemetry
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <Card className="bg-card/50 border-border">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between text-muted-foreground mb-3">
@@ -288,16 +187,6 @@ function DashboardView({ exams, submissions, onStartExam, onLogout, user }: any)
                   <div className="text-2xl sm:text-3xl font-bold text-primary">
                     {stats.totalAttempts > 0 ? `${Math.round(stats.highestScore)}%` : '--'}
                   </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-card/50 border-destructive/20 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-12 h-12 bg-destructive/10 rounded-bl-full pointer-events-none" />
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between text-destructive/80 mb-3">
-                    <span className="text-xs sm:text-sm font-medium">Violations</span>
-                    <ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-destructive">{stats.totalViolations}</div>
                 </CardContent>
               </Card>
             </div>
@@ -336,8 +225,6 @@ function DashboardView({ exams, submissions, onStartExam, onLogout, user }: any)
                             Marks: <span className="text-foreground font-medium">100</span>
                           </span>
                           <span className="text-muted-foreground flex items-center">
-                            <AlertTriangle className="w-3 h-3 mr-1 text-destructive/70" />
-                            {exam.max_violations || 2} violations
                           </span>
                         </div>
                       </CardContent>
@@ -396,12 +283,7 @@ function DashboardView({ exams, submissions, onStartExam, onLogout, user }: any)
                               </span>
                             </div>
                           </div>
-                          {(attempt.violations || attempt.violations_count || 0) > 0 && (
-                            <div className="flex items-center text-[10px] text-destructive uppercase font-mono tracking-wider mt-1">
-                              <ShieldAlert className="w-3 h-3 mr-1" />
-                              {attempt.violations || attempt.violations_count} violations
-                            </div>
-                          )}
+
                         </div>
                       ))}
                     </div>
@@ -424,41 +306,20 @@ function DashboardView({ exams, submissions, onStartExam, onLogout, user }: any)
 // 3. EXAM TAKING VIEW (Exact Replit UI)
 // ==========================================
 function ExamTakingView({ exam, questions, onSubmit, user }: any) {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [breachOverlay, setBreachOverlay] = useState(false);
   const [timeLeft, setTimeLeft] = useState((exam?.duration_minutes || 60) * 60);
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [violationCount, setViolationCount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const isSubmittingRef = useRef(false);
-
-  const handleEnterFullscreen = async () => {
-    try {
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      if (isMobile) {
-        setIsFullscreen(true);
-        return;
-      }
-      if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen();
-        setIsFullscreen(true);
-      }
-    } catch (err) {
-      console.error(err);
-      setIsFullscreen(true); // Fallback to let them take the test anyway
-    }
-  };
 
   const processSubmit = useCallback((auto = false) => {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
     setIsProcessing(true);
-    if (document.fullscreenElement) document.exitFullscreen().catch(console.error);
-    onSubmit(answers, auto, violationCount, (exam?.duration_minutes || 60) * 60 - timeLeft);
-  }, [answers, violationCount, timeLeft, exam, onSubmit]);
+    onSubmit(answers, auto, 0, (exam?.duration_minutes || 60) * 60 - timeLeft);
+  }, [answers, timeLeft, exam, onSubmit]);
 
   useEffect(() => {
-    if (timeLeft <= 0 || breachOverlay) return;
+    if (timeLeft <= 0) return;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) { clearInterval(timer); processSubmit(true); return 0; }
@@ -466,71 +327,13 @@ function ExamTakingView({ exam, questions, onSubmit, user }: any) {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, breachOverlay, processSubmit]);
-
-  useEffect(() => {
-    const handleSecurityBreach = () => {
-      if (breachOverlay) return;
-      setBreachOverlay(true);
-      const newViolationCount = violationCount + 1;
-      setViolationCount(newViolationCount);
-      
-      if (newViolationCount >= (exam.max_violations || 2)) {
-        processSubmit(true);
-      } else {
-        setTimeout(() => {
-          setBreachOverlay(false);
-          if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(console.error);
-          }
-        }, 3000);
-      }
-    };
-
-    const onFullscreenChange = () => {
-      if (isSubmittingRef.current) return;
-      setIsFullscreen(!!document.fullscreenElement);
-      if (!document.fullscreenElement) handleSecurityBreach();
-    };
-    const onVisibilityChange = () => { if (!isSubmittingRef.current && document.visibilityState === 'hidden') handleSecurityBreach(); };
-    const onBlur = () => { if (!isSubmittingRef.current) handleSecurityBreach(); };
-
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    window.addEventListener('blur', onBlur);
-    return () => {
-      document.removeEventListener('fullscreenchange', onFullscreenChange);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('blur', onBlur);
-    };
-  }, [breachOverlay, violationCount, exam, processSubmit]);
+  }, [timeLeft, processSubmit]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
-
-  if (!isFullscreen && !breachOverlay) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-        <div className="max-w-sm w-full text-center space-y-6">
-          <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center mx-auto">
-            <AlertTriangle className="w-8 h-8 text-yellow-500" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight mb-2">Fullscreen Required</h1>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              This assessment requires fullscreen mode. Exiting fullscreen or switching tabs will log a security violation.
-            </p>
-          </div>
-          <Button size="lg" className="w-full h-12" onClick={handleEnterFullscreen}>
-             Enter Fullscreen & Begin
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col cursor-default select-none">
@@ -543,24 +346,7 @@ function ExamTakingView({ exam, questions, onSubmit, user }: any) {
           >
             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-6" />
             <h1 className="text-2xl font-bold tracking-tight mb-2">Analyzing Responses</h1>
-            <p className="text-muted-foreground">Evaluating your answers and enforcing security heuristics...</p>
-          </motion.div>
-        )}
-        {breachOverlay && !isProcessing && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-destructive flex flex-col items-center justify-center text-destructive-foreground p-6 text-center"
-          >
-            <ShieldAlert className="w-16 h-16 sm:w-24 sm:h-24 mb-6 animate-pulse" />
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tighter mb-3">INTEGRITY BREACH</h1>
-            <p className="text-base sm:text-xl opacity-90 max-w-md font-mono">
-              Unauthorized window activity detected. Violation logged.
-            </p>
-            <div className="mt-8 text-base font-mono opacity-70">
-              Violations: {violationCount} / {exam.max_violations || 2}
-            </div>
+            <p className="text-muted-foreground">Evaluating your answers...</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -568,10 +354,6 @@ function ExamTakingView({ exam, questions, onSubmit, user }: any) {
       <header className="sticky top-0 z-40 bg-card border-b border-border/50 select-none">
         <div className="flex items-center justify-between px-4 pt-3 pb-2 sm:hidden">
           <span className="font-bold text-sm truncate max-w-[55%]">{exam.title}</span>
-          <div className="flex items-center gap-1 text-destructive font-mono text-xs font-bold bg-destructive/10 px-2 py-1 rounded border border-destructive/20">
-            <ShieldAlert className="w-3 h-3" />
-            {violationCount}/{exam.max_violations || 2}
-          </div>
         </div>
         <div className="flex items-center justify-between px-4 pb-3 sm:hidden">
           <div className="flex items-center gap-1.5 font-mono font-bold text-lg tracking-wider">
@@ -589,10 +371,6 @@ function ExamTakingView({ exam, questions, onSubmit, user }: any) {
           <div className="flex items-center gap-4 min-w-0">
             <span className="font-bold tracking-tight text-base truncate max-w-xs">{exam.title}</span>
             <div className="h-4 w-px bg-border" />
-            <div className="flex items-center gap-1.5 text-destructive font-mono text-sm font-bold bg-destructive/10 px-3 py-1 rounded border border-destructive/20 shrink-0">
-              <ShieldAlert className="w-4 h-4" />
-              VIOLATIONS: {violationCount}/{exam.max_violations || 2}
-            </div>
           </div>
           <div className="flex items-center gap-4 shrink-0">
             <div className="flex items-center gap-2 text-xl font-mono font-bold tracking-wider">
@@ -697,11 +475,11 @@ function ResultsView({ result, onBack }: any) {
             </motion.h1>
             <motion.p variants={item} className="text-muted-foreground font-mono text-xs sm:text-sm uppercase tracking-wider">
               Status:{" "}
-              {result.violations >= 2 ? <span className="text-destructive font-bold">SECURITY BREACH</span> : isPass ? <span className="text-primary font-bold">PASSED</span> : <span className="text-destructive font-bold">FAILED</span>}
+              {isPass ? <span className="text-primary font-bold">PASSED</span> : <span className="text-destructive font-bold">FAILED</span>}
             </motion.p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
             <motion.div variants={item}>
               <Card className="bg-card border-border">
                 <CardContent className="p-4 sm:p-6 flex items-center justify-between">
@@ -714,18 +492,7 @@ function ResultsView({ result, onBack }: any) {
                   <Award className={`w-7 h-7 sm:w-8 sm:h-8 ${isPass ? 'text-primary' : 'text-muted-foreground'}`} />
                 </CardContent>
               </Card>
-            </motion.div>
-            <motion.div variants={item}>
-              <Card className={`bg-card ${result.violations > 0 ? 'border-destructive/30' : 'border-border'}`}>
-                <CardContent className="p-4 sm:p-6 flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs sm:text-sm text-muted-foreground font-medium">Security Violations</p>
-                    <p className={`text-xl sm:text-2xl font-bold ${result.violations > 0 ? 'text-destructive' : 'text-primary'}`}>{result.violations}</p>
-                  </div>
-                  {result.violations > 0 ? <ShieldAlert className="w-7 h-7 sm:w-8 sm:h-8 text-destructive opacity-80" /> : <Shield className="w-7 h-7 sm:w-8 sm:h-8 text-primary opacity-80" />}
-                </CardContent>
-              </Card>
-            </motion.div>
+
           </div>
 
           {result.breakdown && (
@@ -789,8 +556,8 @@ function ResultsView({ result, onBack }: any) {
 // MAIN CONTROLLER
 // ==========================================
 export default function SphnsExmTest() {
-  const { user, loading: authLoading, signOut } = useAuth();
   const { toast } = useToast();
+  const [userDetails, setUserDetails] = useState<any>(null);
   
   const [phase, setPhase] = useState<"auth" | "dashboard" | "exam" | "results" | "error">("auth");
   const [insertErrorData, setInsertErrorData] = useState<string>("");
@@ -799,95 +566,33 @@ export default function SphnsExmTest() {
   const [selectedEx, setSelectedEx] = useState<any | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [evalResult, setEvalResult] = useState<any>(null);
-  const [showRegDialog, setShowRegDialog] = useState(false);
   const [showConfirmStart, setShowConfirmStart] = useState(false);
-  const [isCheckingReg, setIsCheckingReg] = useState(false);
-  const [regData, setRegData] = useState({
-    full_name: "", roll_number: "", year: "", section: "", department: "", college: "", phone: ""
-  });
-  const [userProfile, setUserProfile] = useState<any>(null);
   const [confirmData, setConfirmData] = useState({ name: "", roll: "" });
   const hasInitializedRef = useRef(false);
 
-  const checkRegistration = async (u: any) => {
-    if (!u) return;
-    setIsCheckingReg(true);
-    try {
-      const { data, error } = await (supabaseAdmin || supabase)
-        .from('user_registrations')
-        .select('*')
-        .eq('user_id', u.id)
-        .single();
-      
-      if (!data) {
-        setShowRegDialog(true);
-      } else {
-        setUserProfile(data);
-        setPhase("dashboard");
-      }
-    } catch (e) {
-      setShowRegDialog(true);
-    } finally {
-      setIsCheckingReg(false);
-    }
-  };
-
   useEffect(() => {
-    if (!authLoading) {
-      if (user) {
-        if (!hasInitializedRef.current) {
-          hasInitializedRef.current = true;
-          checkRegistration(user);
-          fetchData();
-        }
-      } else {
-        hasInitializedRef.current = false;
-        setPhase("auth");
-      }
+    if (!hasInitializedRef.current && userDetails) {
+      hasInitializedRef.current = true;
+      fetchData();
+      setPhase("dashboard");
+    } else if (!userDetails) {
+      hasInitializedRef.current = false;
+      setPhase("auth");
     }
-  }, [user, authLoading]);
+  }, [userDetails]);
 
-  const handleRegSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    try {
-      const { error } = await (supabaseAdmin || supabase)
-        .from('user_registrations')
-        .insert({
-          user_id: user.id,
-          email: user.email || '',
-          full_name: regData.full_name || user.email?.split('@')[0] || 'User',
-          roll_number: regData.roll_number,
-          year: regData.year,
-          section: regData.section,
-          department: regData.department,
-          college: regData.college,
-          phone: regData.phone
-        });
-      if (error) throw error;
-      toast({ title: "Registration complete!" });
-      setShowRegDialog(false);
-      checkRegistration(user);
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Registration failed", description: e.message });
-    }
-  };
 
   const fetchData = async () => {
-    if (!user) return;
-    const [eRes, sRes] = await Promise.all([
-      supabase.from("exams").select("*").eq("is_active", true).order("created_at", { ascending: false }),
-      supabase.from("exam_submissions").select("*, exams(title)").eq("user_id", user.id).order("created_at", { ascending: false })
-    ]);
-    if (!eRes.data) setExams([]); else setExams(eRes.data);
-    if (sRes.data) setSubmissions(sRes.data); else setSubmissions([]);
+    const { data } = await (supabaseAdmin || supabase).from("exams").select("*").eq("is_active", true).order("created_at", { ascending: false });
+    if (data) setExams(data); else setExams([]);
+    setSubmissions([]); // Skip loading past submissions for anonymous test
   };
 
   const handleStartExam = async (ex: any) => {
     setSelectedEx(ex);
     setConfirmData({
-      name: userProfile?.full_name || user?.email?.split("@")[0] || "",
-      roll: userProfile?.roll_number || ""
+      name: userDetails?.name || "",
+      roll: userDetails?.phone || ""
     });
     setShowConfirmStart(true);
   };
@@ -945,12 +650,12 @@ export default function SphnsExmTest() {
       
       const insertPromise = adminClient.from("exam_submissions").insert({
         exam_id: selectedEx?.id,
-        user_id: user?.id,
+        user_id: null,
         score,
         total_marks: total,
         time_used_seconds: timeTakenSeconds,
         status: auto ? "auto_submitted" : "completed",
-        answers: { ...answers, _breakdown: compactResults },
+        answers: { ...answers, _breakdown: compactResults, student_details: userDetails },
         violations: violations,
         exam_title: selectedEx?.title,
         student_name: confirmData.name || "Student",
@@ -989,18 +694,15 @@ export default function SphnsExmTest() {
   };
 
   const handleLogout = async () => {
+    setUserDetails(null);
     setPhase("auth");
-    await signOut();
-    window.location.reload();
   };
-
-  if (authLoading) return <div className="min-h-screen bg-background" />;
 
   return (
     <>
-      {phase === "auth" && <AuthView onAuthSuccess={() => setPhase("dashboard")} />}
-      {phase === "dashboard" && <DashboardView exams={exams} submissions={submissions} onStartExam={handleStartExam} onLogout={handleLogout} user={user} />}
-      {phase === "exam" && <ExamTakingView exam={selectedEx} questions={questions} onSubmit={handleSubmitExam} user={user} />}
+      {phase === "auth" && <DetailsView onAuthSuccess={() => setPhase("dashboard")} onSetUserDetails={setUserDetails} />}
+      {phase === "dashboard" && <DashboardView exams={exams} submissions={submissions} onStartExam={handleStartExam} onLogout={handleLogout} user={userDetails} />}
+      {phase === "exam" && <ExamTakingView exam={selectedEx} questions={questions} onSubmit={handleSubmitExam} user={userDetails} />}
       {phase === "results" && <ResultsView result={evalResult} onBack={() => { setEvalResult(null); setPhase("dashboard"); }} />}
       
       <Dialog open={showRegDialog} onOpenChange={() => {}}>
