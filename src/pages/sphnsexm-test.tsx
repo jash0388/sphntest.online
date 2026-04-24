@@ -224,8 +224,6 @@ function DashboardView({ exams, submissions, onStartExam, onLogout, user }: any)
                           <span className="text-muted-foreground">
                             Marks: <span className="text-foreground font-medium">100</span>
                           </span>
-                          <span className="text-muted-foreground flex items-center">
-                          </span>
                         </div>
                       </CardContent>
                       <CardFooter className="pl-5">
@@ -492,7 +490,7 @@ function ResultsView({ result, onBack }: any) {
                   <Award className={`w-7 h-7 sm:w-8 sm:h-8 ${isPass ? 'text-primary' : 'text-muted-foreground'}`} />
                 </CardContent>
               </Card>
-
+            </motion.div>
           </div>
 
           {result.breakdown && (
